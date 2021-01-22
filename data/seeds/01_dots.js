@@ -1,4 +1,4 @@
-// Create 2D matrix of game grid for seeding the valid nodes record
+// Create 2D matrix of 3x3 game grid for seeding the nodes record
 function allNodes() {
   let nodes = [];
   for (let i=0; i<4; i++) {
@@ -13,7 +13,7 @@ exports.seed = function(knex) {
   return knex('dots').truncate()
     .then(function () {
       return knex('dots').insert([
-        {id: 1, validNodes: allNodes(), visitedNodes: '', startNode: ''}
+        {id: 1, validNodes: '', visitedNodes: '', startNode: ''}
       ]);
     });
 };

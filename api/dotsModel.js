@@ -4,10 +4,25 @@ module.exports = {
     checkValidStart,
     checkValidEnd,
     checkGameOver,
-    removeValidNodes,
+    removeFromAllNodes,
     addStartNode,
     getStartNode,
-    getValidNodes
+    getValidNodes,
+    setValidNodes,
+    setStartNode,
+    getAllNodes
+}
+
+function setValidNodes() {
+    
+}
+
+function getAllNodes() {
+    return db('dots').select('allNodes').first();
+}
+
+function setStartNode(node) {
+    return db('dots').where({ id: 1 }).update({ startNode: node });
 }
 
 function getValidNodes() {
@@ -25,27 +40,44 @@ function checkGameOver() {
     return db('dots').select('validNodes').length === 0
 }
 
-function checkValidEnd() {
-    // Erase startNode
-    return
-}
-
-function checkValidStart(node) {
-    if (getStartNode().length === 0) {
+async function checkValidEnd(node) {
+    // Check if node is a valid end node
+    // Return true if node is valid end node
+    start = await getStartNode().split(',');
+    valids = await getValidNodes().split(',');
+    if (node === startNode) {
+        return false
+    } else if (valids.includes(node) === false) {
         return false
     } else {
-
+        return true
     }
+}
+
+async function checkValidStart(node) {
+    // Check if node is a valid start node
+    // Takes in a node array ex: [1,2]
+    valids = await getValidNodes().split(',');
+    for (let i=0; i<valids.length; i++) {
+        if (node === valids[i]) {
+            return true
+        }
+    }
+    return false
 }
 
 function getStartNode() {
     // Return the first record of the  startNode column in the dots table
-    return db('dots').where({ id: 1 }).select('startNode');
+    return db('dots').where({ id: 1 }).select('startNode').first();
 }
 
-function removeValidNodes(nodes) {
-    valids = getValidNodes();
-    nodes.map(element => {
-        if ()
+function removeFromAllNodes(nodes) {
+    // Remove nodes after they were selected.
+    valids = getAllNodes().split(',');
+    nodes.map((element, index) => {
+        if (valids.includes(element)) {
+            valids.pop(index);
+        }
     })
+    return db('dots').where({ id: 1 }).update({ allNodes: valids.join() });
 }

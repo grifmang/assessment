@@ -14,6 +14,7 @@ server.get('/', (req, res) => {
 
 server.get('/initialize', (req, res) => {
 
+    // Reset all values in db to defaults
     return res.json({ 
         "msg": "INITIALIZE",
             "body": {
