@@ -13,7 +13,7 @@ exports.seed = function(knex) {
   return knex('dots').truncate()
     .then(function () {
       return knex('dots').insert([
-        {id: 1, validNodes: '', visitedNodes: '', startNode: ''}
+        {id: 1, ends: [], allNodes: allNodes(), validNodes: [], startNode: []}
       ]);
     });
 };

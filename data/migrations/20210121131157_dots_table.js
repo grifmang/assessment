@@ -4,11 +4,11 @@ exports.up = function(knex) {
     table.integer('id');
     table.boolean('firstClick').defaultTo(true);
     table.integer('turn').defaultTo(1);
-    table.string('ends', 255);
-    table.string('validNodes', 255);
-    table.string('visitedNodes', 255);
-    table.string('allNodes', 255);
-    table.string('startNode', 255);
+    table.specificType('ends', 'integer[][]');
+    table.specificType('validNodes', 'integer[]');
+    // table.string('visitedNodes', 255);
+    table.specificType('allNodes', 'integer[][]');
+    table.specificType('startNode', 'integer[]');
   })
 };
 
