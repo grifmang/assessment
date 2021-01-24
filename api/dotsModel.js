@@ -165,7 +165,7 @@ async function checkValidEnd(startNode, endNode) {
     })
     // Remove array from possibleValids 
     possibleValids.map((element, index) => {
-        validNodes(e => {
+        validNodes.map(e => {
             if (JSON.stringify(element) === JSON.stringify(e)) {
                 possibleValids.splice(index, 1);
             }
