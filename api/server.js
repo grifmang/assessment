@@ -11,7 +11,7 @@ server.use(express.json());
 
 // Test API server
 server.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname+'/api/index.html'));
+    res.sendFile(path.join(__dirname+'/index.html'));
 })
 
 server.get('/initialize', (req, res) => {
