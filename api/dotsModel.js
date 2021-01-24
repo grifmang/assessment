@@ -172,8 +172,8 @@ async function checkValidEnd(startNode, endNode) {
         })
     })
         return false
-    }
-    return true
+    // }
+    // return true
     
 }
 
