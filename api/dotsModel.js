@@ -151,7 +151,7 @@ async function checkValidEnd(startNode, endNode) {
     possibleValids.push(new Array(startNode[0] - 1, startNode[1] + 1));
     // Remove arrays from validPossibles that do not match an array in allNodes
     const { allNodes } = await getAllNodes();
-    validPossibles.map((element, index) => {
+    validNodes.map((element, index) => {
         let equals = false;
         for (let i=0; i<allNodes.length; i++) {
             if (JSON.stringify(element) === JSON.stringify(allNodes[i])) {
@@ -160,12 +160,12 @@ async function checkValidEnd(startNode, endNode) {
             }
         }
         if (!equals) {
-            validPossibles.splice(index, 1);
+            validNodes.splice(index, 1);
         }
     })
     // Remove array from possibleValids 
     possibleValids.map((element, index) => {
-        validPossibles(e => {
+        validNodes(e => {
             if (JSON.stringify(element) === JSON.stringify(e)) {
                 possibleValids.splice(index, 1);
             }
