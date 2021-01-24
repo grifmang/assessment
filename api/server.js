@@ -71,9 +71,9 @@ server.post('/node-clicked', async (req, res) => {
         } else {
             // Check end node
             // Conditional can be changed to checkValidEnd()
-            const isValidEnd = await db.checkValidEnd(startNode, [x,y]);
-            // if ((x === startNode[0] + 1 && y === startNode[1]) || (x === startNode[0] - 1 && y === startNode[1]) || (x === startNode[0] && y === startNode[1] + 1) || (x === startNode[0] && y === startNode[1] - 1) || (x === startNode[0] + 1 && y === startNode[1] + 1) || (x === startNode[0] - 1 && y === startNode[1] - 1)) {
-            if (isValidEnd === true) {
+            // const isValidEnd = await db.checkValidEnd(startNode, [x,y]);
+            if ((x === startNode[0] + 1 && y === startNode[1]) || (x === startNode[0] - 1 && y === startNode[1]) || (x === startNode[0] && y === startNode[1] + 1) || (x === startNode[0] && y === startNode[1] - 1) || (x === startNode[0] + 1 && y === startNode[1] + 1) || (x === startNode[0] - 1 && y === startNode[1] - 1)) {
+            // if (isValidEnd === true) {
                 await db.toggleFirstClick();
                 await db.setStartNode([]);
                 await db.incrementTurn();
