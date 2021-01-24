@@ -9,9 +9,9 @@ server.use(express.urlencoded());
 server.use(express.json());
 
 // Test API server
-// server.get('/', (req, res) => {
-//     console.log('It worked.')
-// })
+server.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname+'/api/index.html'));
+})
 
 server.get('/initialize', (req, res) => {
     // Reset all values in db to defaults and return starting message
@@ -55,6 +55,7 @@ server.post('/node-clicked', async (req, res) => {
     // Second Click
     else {
         // Check if startNode === input coords
+        // Need to also check if startNode is valid with checkValidStart()
         if ([x,y].length === startNode.length && [x,y].every((value, index) => value === startNode[index]) === true) {
             await db.setStartNode([]);
             await db.toggleFirstClick();
@@ -68,7 +69,10 @@ server.post('/node-clicked', async (req, res) => {
             })
         } else {
             // Check end node
-            if ((x === startNode[0] + 1 && y === startNode[1]) || (x === startNode[0] - 1 && y === startNode[1]) || (x === startNode[0] && y === startNode[1] + 1) || (x === startNode[0] && y === startNode[1] - 1) || (x === startNode[0] + 1 && y === startNode[1] + 1) || (x === startNode[0] - 1 && y === startNode[1] - 1)) {
+            // Conditional can be changed to checkValidEnd()
+            const isValidEnd = await db.checkValidEnd(startNode, [x,y]);
+            // if ((x === startNode[0] + 1 && y === startNode[1]) || (x === startNode[0] - 1 && y === startNode[1]) || (x === startNode[0] && y === startNode[1] + 1) || (x === startNode[0] && y === startNode[1] - 1) || (x === startNode[0] + 1 && y === startNode[1] + 1) || (x === startNode[0] - 1 && y === startNode[1] - 1)) {
+            if (isValidEnd === true) {
                 await db.toggleFirstClick();
                 await db.setStartNode([]);
                 await db.incrementTurn();

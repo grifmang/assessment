@@ -64,7 +64,7 @@ async function setEnds(endsArray) {
 
 async function setValidNodes() {
     // Takes in the current end points and creates an array of all possible valid moves.
-    // Then, we check those possibles against the known open, or valid, nodes. If they are not in the validNodes array, we remove them.
+    // Then, we check those possibles against the known open or valid nodes. If they are not in the validNodes array, we remove them.
     // We then set validPossibles to the validNodes record.
     let validPossibles = []
     let { ends } = await getEnds();
@@ -137,13 +137,44 @@ async function checkValidEnd(startNode, endNode) {
     // Check if node is a valid end node
     // Return true if node is valid end node
     const { validNodes } = await getValidNodes();
-    if (endNode === startNode) {
+    if (JSON.stringify(endNode) === JSON.stringify(startNode)) {
         return false
-    } else if (validNodes.includes(endNode) === false) {
-        return false
-    } else {
-        return true
     }
+    let possibleValids = []
+    possibleValids.push(new Array(startNode[0] + 1, startNode[1]));
+    possibleValids.push(new Array(startNode[0] + 1, startNode[1] + 1));
+    possibleValids.push(new Array(startNode[0], startNode[1] + 1));
+    possibleValids.push(new Array(startNode[0] - 1, startNode[1]));
+    possibleValids.push(new Array(startNode[0], startNode[1] - 1));
+    possibleValids.push(new Array(startNode[0] - 1, startNode[1] - 1));
+    possibleValids.push(new Array(startNode[0] + 1, startNode[1] - 1));
+    possibleValids.push(new Array(startNode[0] - 1, startNode[1] + 1));
+    // Remove arrays from validPossibles that do not match an array in allNodes
+    const { allNodes } = await getAllNodes();
+    validPossibles.map((element, index) => {
+        let equals = false;
+        for (let i=0; i<allNodes.length; i++) {
+            if (JSON.stringify(element) === JSON.stringify(allNodes[i])) {
+                equals = true;
+                break;
+            }
+        }
+        if (!equals) {
+            validPossibles.splice(index, 1);
+        }
+    })
+    // Remove array from possibleValids 
+    possibleValids.map((element, index) => {
+        validPossibles(e => {
+            if (JSON.stringify(element) === JSON.stringify(e)) {
+                possibleValids.splice(index, 1);
+            }
+        })
+    })
+        return false
+    }
+    return true
+    
 }
 
 async function checkValidStart(node) {
@@ -151,7 +182,7 @@ async function checkValidStart(node) {
     // Takes in a node array ex: [1,2]
     const { validNodes } = await getValidNodes();
     for (let i=0; i<validNodes.length; i++) {
-        if (node === validNodes[i]) {
+        if (JSON.stringify(node) === JSON.stringify(validNodes[i])) {
             return true
         }
     }
