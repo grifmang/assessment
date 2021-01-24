@@ -32,6 +32,10 @@ server.post('/node-clicked', async (req, res) => {
     const { firstClick } = await db.getFirstClick();
     const { ends } = await db.getEnds();
     const { startNode } = await db.getStartNode();
+    const { turn } = await db.getTurn();
+    let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
+    console.log(turn)
+    console.log(player)
     // const { turn } = await db.getTurn();
     // console.log(turn)
     
@@ -39,7 +43,6 @@ server.post('/node-clicked', async (req, res) => {
     if (startNode.length === 0) {
         await db.toggleFirstClick();
         await db.setStartNode([x,y]);
-        let player = await db.getTurn() % 2 === 0 ? 'Player 2' : 'Player 1';
         return res.json({
             "msg": "VALID_START_NODE",
             "body": {
@@ -51,8 +54,8 @@ server.post('/node-clicked', async (req, res) => {
     } 
     // Second Click
     else {
+        // Check if startNode === input coords
         if ([x,y].length === startNode.length && [x,y].every((value, index) => value === startNode[index]) === true) {
-            // let player = await db.getTurn() % 2 === 0 ? 'Player 2' : 'Player 1';
             await db.setStartNode([]);
             await db.toggleFirstClick();
             return res.json({
@@ -69,29 +72,51 @@ server.post('/node-clicked', async (req, res) => {
                 await db.toggleFirstClick();
                 await db.setStartNode([]);
                 await db.incrementTurn();
-                let player = await db.getTurn() % 2 === 0 ? 'Player 2' : 'Player 1';
+                const { turn } = await db.getTurn();
+                let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
                 await db.setEnds(Array([x,y], startNode));
+                console.log(Array([x,y], startNode))
                 await db.removeFromAllNodes(Array([x,y], startNode))
                 await db.setValidNodes();
-                return res.json({
-                    "msg": "VALID_END_NODE",
-                    "body": {
-                        "newLine": {
-                            "start": {
-                                "x": startNode[0],
-                                "y": startNode[1]
+                const gameOver = await db.checkGameOver();
+                if (gameOver === true) {
+                    return res.json({
+                        "msg": "GAME_OVER",
+                        "body": {
+                            "newLine": {
+                                "start": {
+                                    "x": startNode[0],
+                                    "y": startNode[1]
+                                },
+                                "end": {
+                                    "x": x,
+                                    "y": y
+                                }
                             },
-                            "end": {
-                                "x": x,
-                                "y": y
-                            }
-                        },
-                        "heading": player,
-                        "message": "Please select a starting node."
-                    }
-                })
+                            "heading": "Game Over",
+                            "message": (turn + 1) % 2 === 0 ? 'Player 2 Wins!' : 'Player 1 Wins!'
+                        }
+                    })
+                } else {
+                    return res.json({
+                        "msg": "VALID_END_NODE",
+                        "body": {
+                            "newLine": {
+                                "start": {
+                                    "x": startNode[0],
+                                    "y": startNode[1]
+                                },
+                                "end": {
+                                    "x": x,
+                                    "y": y
+                                }
+                            },
+                            "heading": player,
+                            "message": `Awaiting ${player}'s Move.`
+                        }
+                    })
+                }
             } else {
-                let player = await db.getTurn() % 2 === 0 ? 'Player 2' : 'Player 1';
                 await db.setStartNode([]);
                 await db.toggleFirstClick();
                 return res.json({
