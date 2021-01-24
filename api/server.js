@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const server = express();
 const db = require('./dotsModel.js');
+const path = require('path');
 server.use(cors());
 server.use(helmet());
 server.use(express.urlencoded());
