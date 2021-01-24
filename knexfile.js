@@ -25,9 +25,10 @@ module.exports = {
     seeds: {
       directory: './data/seeds'
     },
-    ssl: {
-      rejectUnauthorized: false
-    },
+    ssl: true
+    // ssl: {
+    //   rejectUnauthorized: false
+    // },
   }
 
 };
