@@ -9,6 +9,11 @@ server.use(helmet());
 server.use(express.urlencoded());
 server.use(express.json());
 
+// Change state from PG to initialState
+initialState = {
+    test: ['Tim']
+}
+
 // Test API server
 server.get('/', (req, res) => {
     res.sendFile(path.join(__dirname+'/index.html'));
@@ -17,6 +22,9 @@ server.get('/', (req, res) => {
 server.get('/initialize', (req, res) => {
     // Reset all values in db to defaults and return starting message
     db.setDefaults();
+    initialState = {
+        test: ['Tim']
+    }
     return res.json({ 
         "msg": "INITIALIZE",
         "body": {
@@ -29,12 +37,14 @@ server.get('/initialize', (req, res) => {
 
 server.post('/node-clicked', async (req, res) => {
     const {x, y} = req.body;
+    initialState.test.push('Second')
     // Check if first click
     const { firstClick } = await db.getFirstClick();
     const { ends } = await db.getEnds();
     const { startNode } = await db.getStartNode();
     const { turn } = await db.getTurn();
     let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
+    console.log(initialState)
     console.log(turn)
     console.log(player)
     // const { turn } = await db.getTurn();
