@@ -2,17 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const server = express();
-const db = require('./dotsModel.js');
+// const db = require('./dotsModel.js');
 const path = require('path');
 server.use(cors());
+const utils = require('./utils.js');
 server.use(helmet());
 server.use(express.urlencoded());
 server.use(express.json());
 
 // Change state from PG to initialState
-initialState = {
-    test: ['Tim']
-}
+initialState = {}
 
 // Test API server
 server.get('/', (req, res) => {
@@ -20,11 +19,8 @@ server.get('/', (req, res) => {
 })
 
 server.get('/initialize', (req, res) => {
-    // Reset all values in db to defaults and return starting message
-    db.setDefaults();
-    initialState = {
-        test: ['Tim']
-    }
+    // Reset all values in state to defaults and return starting message
+    initialState = utils.setDefaults(initialState);
     return res.json({ 
         "msg": "INITIALIZE",
         "body": {
@@ -37,23 +33,20 @@ server.get('/initialize', (req, res) => {
 
 server.post('/node-clicked', async (req, res) => {
     const {x, y} = req.body;
-    initialState.test.push('Second')
     // Check if first click
-    const { firstClick } = await db.getFirstClick();
-    const { ends } = await db.getEnds();
-    const { startNode } = await db.getStartNode();
-    const { turn } = await db.getTurn();
+    let firstClick = initialState.firstClick
+    let ends = initialState.ends
+    let startNode = initialState.startNode
+    let turn = initialState.turn
     let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
-    console.log(initialState)
-    console.log(turn)
-    console.log(player)
-    // const { turn } = await db.getTurn();
-    // console.log(turn)
     
     // First Click
     if (startNode.length === 0) {
-        await db.toggleFirstClick();
-        await db.setStartNode([x,y]);
+        initialState = {
+            ...initialState, 
+            firstClick: !initialState.firstClick,
+            startNode: [x,y]
+        }
         return res.json({
             "msg": "VALID_START_NODE",
             "body": {
@@ -68,8 +61,11 @@ server.post('/node-clicked', async (req, res) => {
         // Check if startNode === input coords
         // Need to also check if startNode is valid with checkValidStart()
         if ([x,y].length === startNode.length && [x,y].every((value, index) => value === startNode[index]) === true) {
-            await db.setStartNode([]);
-            await db.toggleFirstClick();
+            initialState = {
+                ...initialState,
+                startNode: [],
+                firstClick: !initialState.firstClick
+            }
             return res.json({
                 "msg": "INVALID_END_NODE",
                 "body": {
@@ -80,20 +76,27 @@ server.post('/node-clicked', async (req, res) => {
             })
         } else {
             // Check end node
-            // Conditional can be changed to checkValidEnd()
-            // const isValidEnd = await db.checkValidEnd(startNode, [x,y]);
+            // End node can be more than one node away as long as it doesn't intersect
+            // and is a valid node
+
+            // This needs to be changed to a function. Function needs to adhere to above rules
             if ((x === startNode[0] + 1 && y === startNode[1]) || (x === startNode[0] - 1 && y === startNode[1]) || (x === startNode[0] && y === startNode[1] + 1) || (x === startNode[0] && y === startNode[1] - 1) || (x === startNode[0] + 1 && y === startNode[1] + 1) || (x === startNode[0] - 1 && y === startNode[1] - 1)) {
-            // if (isValidEnd === true) {
-                await db.toggleFirstClick();
-                await db.setStartNode([]);
-                await db.incrementTurn();
-                const { turn } = await db.getTurn();
+                initialState = {
+                    ...initialState,
+                    firstClick: !initialState.firstClick,
+                    startNode: [],
+                    turn: initialState.turn + 1,
+                    ends: utils.setEnds(Array([x,y], startNode), initialState.ends),
+                    allNodes: utils.removeFromAllNodes(Array([x,y], startNode), initialState.allNodes)
+                }
+                let turn = initialState.turn
                 let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
-                await db.setEnds(Array([x,y], startNode));
-                console.log(Array([x,y], startNode))
-                await db.removeFromAllNodes(Array([x,y], startNode))
-                await db.setValidNodes();
-                const gameOver = await db.checkGameOver();
+                initialState = {
+                    ...initialState,
+                    validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes)
+                }
+                console.log(initialState)
+                const gameOver = initialState.validNodes.length === 0;
                 if (gameOver === true) {
                     return res.json({
                         "msg": "GAME_OVER",
@@ -132,8 +135,11 @@ server.post('/node-clicked', async (req, res) => {
                     })
                 }
             } else {
-                await db.setStartNode([]);
-                await db.toggleFirstClick();
+                initialState = {
+                    ...initialState,
+                    firstClick: !initialState.firstClick,
+                    startNode: []
+                }
                 return res.json({
                     "msg": "INVALID_END_NODE",
                     "body": {

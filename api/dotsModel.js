@@ -4,17 +4,17 @@ module.exports = {
     checkValidStart,
     checkValidEnd,
     checkGameOver,
-    removeFromAllNodes,
+    // removeFromAllNodes,
     getStartNode,
     getValidNodes,
     setValidNodes,
     setStartNode,
     getAllNodes,
     getEnds,
-    setEnds,
+    // setEnds,
     toggleFirstClick,
     getFirstClick,
-    setDefaults,
+    // setDefaults,
     incrementTurn,
     getTurn
 }
@@ -28,11 +28,11 @@ async function incrementTurn() {
     return db('dots').where({ id: 1 }).update({ turn: turn + 1 });
 }
 
-async function setDefaults() {
-    await db.migrate.rollback();
-    await db.migrate.latest();
-    await db.seed.run()
-}
+// async function setDefaults() {
+//     await db.migrate.rollback();
+//     await db.migrate.latest();
+//     await db.seed.run()
+// }
 
 function getFirstClick() {
     return db('dots').where({ id: 1 }).select('firstClick').first();
@@ -47,73 +47,73 @@ function getEnds() {
     return db('dots').where({ id: 1 }).select('ends').first();
 }
 
-async function setEnds(endsArray) {
-    let { ends } = await getEnds();
-    if (ends.length > 0) {
-        ends.forEach((element, index) => {
-            if (JSON.stringify(element) === JSON.stringify(endsArray[1])) {
-                ends.splice(index, 1);
-                ends.push(endsArray[0]);
-            }  
-        })
-        return db('dots').where({ id: 1 }).update({ ends: ends });
-    } else {
-        return db('dots').where({ id: 1 }).update({ ends: endsArray });
-    }
-}
+// async function setEnds(endsArray) {
+//     let { ends } = await getEnds();
+//     if (ends.length > 0) {
+//         ends.forEach((element, index) => {
+//             if (JSON.stringify(element) === JSON.stringify(endsArray[1])) {
+//                 ends.splice(index, 1);
+//                 ends.push(endsArray[0]);
+//             }  
+//         })
+//         return db('dots').where({ id: 1 }).update({ ends: ends });
+//     } else {
+//         return db('dots').where({ id: 1 }).update({ ends: endsArray });
+//     }
+// }
 
-async function setValidNodes() {
-    // Takes in the current end points and creates an array of all possible valid moves.
-    // Then, we check those possibles against the known open or valid nodes. If they are not in the validNodes array, we remove them.
-    // We then set validPossibles to the validNodes record.
-    let validPossibles = []
-    let { ends } = await getEnds();
-    ends.map(element => {
-        validPossibles.push(new Array(element[0] + 1, element[1]));
-        validPossibles.push(new Array(element[0] + 1, element[1] + 1));
-        validPossibles.push(new Array(element[0], element[1] + 1));
-        validPossibles.push(new Array(element[0] - 1, element[1]));
-        validPossibles.push(new Array(element[0], element[1] - 1));
-        validPossibles.push(new Array(element[0] - 1, element[1] - 1));
-        validPossibles.push(new Array(element[0] + 1, element[1] - 1));
-        validPossibles.push(new Array(element[0] - 1, element[1] + 1));
-    })
-    // Remove arrays from validPossibles that do not match an array in allNodes
-    const { allNodes } = await getAllNodes();
-    validPossibles.map((element, index) => {
-        let equals = false;
-        for (let i=0; i<allNodes.length; i++) {
-            if (JSON.stringify(element) === JSON.stringify(allNodes[i])) {
-                equals = true;
-                break;
-            }
-        }
-        if (!equals) {
-            validPossibles.splice(index, 1);
-        }
-    })
-    // Remove arrays from validPossibles that match an array in ends
-    validPossibles.map((e,i) => {
-        if (e.length === ends[0].length && e.every((value, index) => value === ends[0][index]) === true) {
-        validPossibles.splice(i, 1);
-        } else if (e.length === ends[1].length && e.every((value, index) => value === ends[1][index]) === true) {
-        validPossibles.splice(i, 1); 
-        }
-    })
-    // Remove coords with negative values
-    let ind=0;
-    while (ind < validPossibles.length) {
-      if (validPossibles[ind][0] < 0 || validPossibles[ind][1] < 0 ) {
-        validPossibles.splice(ind, 1);
-      } else {
-        ind += 1;
-      }
-    }
-    // Remove duplicates from validPossible
-    let uniques = Array.from((new Map(validPossibles.map(arr => [arr.join(), arr]))).values());
+// async function setValidNodes() {
+//     // Takes in the current end points and creates an array of all possible valid moves.
+//     // Then, we check those possibles against the known open or valid nodes. If they are not in the validNodes array, we remove them.
+//     // We then set validPossibles to the validNodes record.
+//     let validPossibles = []
+//     let { ends } = await getEnds();
+//     ends.map(element => {
+//         validPossibles.push(new Array(element[0] + 1, element[1]));
+//         validPossibles.push(new Array(element[0] + 1, element[1] + 1));
+//         validPossibles.push(new Array(element[0], element[1] + 1));
+//         validPossibles.push(new Array(element[0] - 1, element[1]));
+//         validPossibles.push(new Array(element[0], element[1] - 1));
+//         validPossibles.push(new Array(element[0] - 1, element[1] - 1));
+//         validPossibles.push(new Array(element[0] + 1, element[1] - 1));
+//         validPossibles.push(new Array(element[0] - 1, element[1] + 1));
+//     })
+//     // Remove arrays from validPossibles that do not match an array in allNodes
+//     const { allNodes } = await getAllNodes();
+//     validPossibles.map((element, index) => {
+//         let equals = false;
+//         for (let i=0; i<allNodes.length; i++) {
+//             if (JSON.stringify(element) === JSON.stringify(allNodes[i])) {
+//                 equals = true;
+//                 break;
+//             }
+//         }
+//         if (!equals) {
+//             validPossibles.splice(index, 1);
+//         }
+//     })
+//     // Remove arrays from validPossibles that match an array in ends
+//     validPossibles.map((e,i) => {
+//         if (e.length === ends[0].length && e.every((value, index) => value === ends[0][index]) === true) {
+//         validPossibles.splice(i, 1);
+//         } else if (e.length === ends[1].length && e.every((value, index) => value === ends[1][index]) === true) {
+//         validPossibles.splice(i, 1); 
+//         }
+//     })
+//     // Remove coords with negative values
+//     let ind=0;
+//     while (ind < validPossibles.length) {
+//       if (validPossibles[ind][0] < 0 || validPossibles[ind][1] < 0 ) {
+//         validPossibles.splice(ind, 1);
+//       } else {
+//         ind += 1;
+//       }
+//     }
+//     // Remove duplicates from validPossible
+//     let uniques = Array.from((new Map(validPossibles.map(arr => [arr.join(), arr]))).values());
 
-    return db('dots').where({ id: 1 }).update({ validNodes: uniques });
-}
+//     return db('dots').where({ id: 1 }).update({ validNodes: uniques });
+// }
 
 function getAllNodes() {
     return db('dots').where({ id: 1 }).select('allNodes').first();
@@ -194,15 +194,15 @@ function getStartNode() {
     return db('dots').where({ id: 1 }).select('startNode').first();
 }
 
-async function removeFromAllNodes(nodes) {
-    // Remove nodes after they were selected.
-    let { allNodes } = await getAllNodes();
-    nodes.map(element => {
-        allNodes.map((e, i) => {
-            if (JSON.stringify(element) === JSON.stringify(e)) {
-                allNodes.splice(i, 1)
-            }  
-        })
-    })
-    return db('dots').where({ id: 1 }).update({ allNodes: allNodes });
-}
+// async function removeFromAllNodes(nodes) {
+//     // Remove nodes after they were selected.
+//     let { allNodes } = await getAllNodes();
+//     nodes.map(element => {
+//         allNodes.map((e, i) => {
+//             if (JSON.stringify(element) === JSON.stringify(e)) {
+//                 allNodes.splice(i, 1)
+//             }  
+//         })
+//     })
+//     return db('dots').where({ id: 1 }).update({ allNodes: allNodes });
+// }
