@@ -31,6 +31,7 @@ server.get('/initialize', (req, res) => {
 })
 
 server.post('/node-clicked', (req, res) => {
+    console.log('valid', initialState.validNodes)
     const {x,y} = req.body;
     let startNode = initialState.startNode
     let ends = initialState.ends
@@ -145,8 +146,10 @@ server.post('/node-clicked', (req, res) => {
                     }
                 })
             } else {
-
-                // set end nodes
+                // valid end node
+                // check if end node is more than one spot from startNode
+                const checkDistance = utils.checkDistance(startNode, [x,y]);
+                // set end nodes and visitedNodes
                 // remove both nodes from allNodes
                 initialState = {
                     ...initialState,
@@ -154,7 +157,8 @@ server.post('/node-clicked', (req, res) => {
                     startNode: [],
                     turn: initialState.turn + 1,
                     ends: utils.setEnds(Array([x,y], startNode), initialState.ends),
-                    allNodes: utils.removeFromAllNodes(Array([x,y], startNode), initialState.allNodes)
+                    allNodes: utils.removeFromAllNodes(Array([x,y], startNode), initialState.allNodes),
+                    visitedNodes: utils.setVisited(initialState.visitedNodes, [[x,y], startNode, ...checkDistance])
                 }
                 let turn = initialState.turn
                 let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
@@ -163,10 +167,10 @@ server.post('/node-clicked', (req, res) => {
                     ...initialState,
                     validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes)
                 }
-                
                 // if gameOver (no more validNodes)
                     // return GAME OVER
-                const gameOver = initialState.validNodes.length === 0;
+                // const gameOver = initialState.validNodes.length === 0;
+                const gameOver = utils.checkGameOver(initialState.validNodes, initialState.visitedNodes);
                 if (gameOver === true) {
                     return res.json({
                         "msg": "GAME_OVER",
@@ -188,11 +192,6 @@ server.post('/node-clicked', (req, res) => {
                 } else {
                     // not gameOver
                         // return VALID END NODE
-                        // set visitedNodes
-                    initialState = {
-                        ...initialState,
-                        visitedNodes: utils.setVisited(initialState.visitedNodes, Array([x,y], startNode))
-                    }
                     return res.json({
                         "msg": "VALID_END_NODE",
                         "body": {

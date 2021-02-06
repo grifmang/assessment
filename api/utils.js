@@ -1,5 +1,3 @@
-const e = require("express");
-
 module.exports = {
     setDefaults,
     setEnds,
@@ -9,7 +7,9 @@ module.exports = {
     checkEnds,
     checkHorizMulti,
     checkVertMulti,
-    checkVisited
+    checkVisited,
+    checkGameOver,
+    checkDistance
 }
 
 function allNodes() {
@@ -182,4 +182,65 @@ function setEnds(endsArray, ends) {
     } else {
         return endsArray;
     }
+}
+
+function checkGameOver(valid, visited) {
+    count = 0;
+    valid.forEach(vn => {
+        visited.forEach(visNode => {
+            if (JSON.stringify(vn) === JSON.stringify(visNode)) {
+                count += 1;
+            }
+        })
+    })
+    if (count === valid.length) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function checkDistance(startNode, endNode) {
+    let returnNodes = [];
+    const sum = node => {
+        node.reduce((first, second) => first + second, 0);
+    }
+    let zero = Math.max(startNode[0], endNode[0]) - Math.min(startNode[0], endNode[0]);
+    let one = Math.max(startNode[1], endNode[1]) - Math.min(startNode[1], endNode[1]);
+    if (zero > 1 && one > 1) {
+        // diagonal
+    }
+    if (zero > 1 && one <= 1) {
+        // horizontal
+        const high = Math.max(sum(startNode), sum(endNode));
+        // const low = Math.min(sum(startNode), sum(endNode));
+        if (sum(startNode) === high) {
+            // startNode is higher
+            for (let i=endNode[0]+1; i<startNode[0]; i++) {
+                returnNodes.push([i, endNode[1]]);
+            }
+        } else {
+            // endNode is higher
+            for (let i=startNode[0]+1; i<endNode[0]; i++) {
+                returnNodes.push([i, endNode[1]]);
+            }
+        }
+    }
+    if (one > 1 && zero <= 1) {
+        // vertical
+        const high = Math.max(sum(startNode), sum(endNode));
+        // const low = Math.min(sum(startNode), sum(endNode));
+        if (sum(startNode) === high) {
+            // startNode is higher
+            for (let i=endNode[1]+1; i<startNode[1]; i++) {
+                returnNodes.push([endNode[0], i]);
+            }
+        } else {
+            // endNode is higher
+            for (let i=startNode[1]+1; i<endNode[1]; i++) {
+                returnNodes.push([endNode[0], i]);
+            }
+        }
+    }
+    return returnNodes;
 }
