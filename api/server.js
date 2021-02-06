@@ -2,10 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const server = express();
-// const db = require('./dotsModel.js');
 const path = require('path');
-server.use(cors());
 const utils = require('./utils.js');
+server.use(cors());
 server.use(helmet());
 server.use(express.urlencoded());
 server.use(express.json());
@@ -20,7 +19,7 @@ server.get('/', (req, res) => {
 
 server.get('/initialize', (req, res) => {
     // Reset all values in state to defaults and return starting message
-    initialState = utils.setDefaults(initialState);
+    initialState = utils.setDefaults();
     return res.json({ 
         "msg": "INITIALIZE",
         "body": {
@@ -31,35 +30,87 @@ server.get('/initialize', (req, res) => {
     })
 })
 
-server.post('/node-clicked', async (req, res) => {
-    const {x, y} = req.body;
-    // Check if first click
-    let firstClick = initialState.firstClick
-    let ends = initialState.ends
+server.post('/node-clicked', (req, res) => {
+    const {x,y} = req.body;
     let startNode = initialState.startNode
-    let turn = initialState.turn
-    let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
-    
+    let ends = initialState.ends
+    let player = initialState.turn % 2 === 0 ? 'Player 2' : 'Player 1';
+    let checkVisited = utils.checkVisited(initialState.visitedNodes, [x,y]);
+
+    // If startNode length is 0
+        // If ends length > 0
+            // update firstClick and startNode
+            // return VALID START NODE
+
     // First Click
     if (startNode.length === 0) {
-        initialState = {
-            ...initialState, 
-            firstClick: !initialState.firstClick,
-            startNode: [x,y]
-        }
-        return res.json({
-            "msg": "VALID_START_NODE",
-            "body": {
-                "newLine": null,
-                "heading": player,
-                "message": "Select a second node to complete the line."
+        if (ends.length === 0) {
+            initialState = {
+                ...initialState, 
+                firstClick: !initialState.firstClick,
+                startNode: [x,y]
             }
-        })
-    } 
-    // Second Click
-    else {
-        // Check if startNode === input coords
-        // Need to also check if startNode is valid with checkValidStart()
+            return res.json({
+                "msg": "VALID_START_NODE",
+                "body": {
+                    "newLine": null,
+                    "heading": player,
+                    "message": "Select a second node to complete the line."
+                }
+            })
+
+        // ends exists
+            // If node is in visitedNodes
+                // return INVALID START NODE
+            // if node in ends
+                // return VALID START NODE
+            // node not in ends
+                // return INVALID START NODE
+        } else {
+            const checkEnds = utils.checkEnds(initialState.ends, [x, y])
+            if (!checkEnds) {
+                return res.json({
+                    "msg": "INVALID_START_NODE",
+                    "body": {
+                        "newLine": null,
+                        "heading": player,
+                        "message": "You must start on either end of the path."
+                    }
+                })
+            } else {
+                const checkEnds = utils.checkEnds(ends, [x,y]);
+                if (checkEnds) {
+                    initialState = {
+                        ...initialState,
+                        firstClick: !initialState.firstClick,
+                        startNode: [x,y]
+                    }
+                    return res.json({
+                        "msg": "VALID_START_NODE",
+                        "body": {
+                            "newLine": null,
+                            "heading": player,
+                            "message": "Select a second node to complete the line."
+                        }
+                    })
+                } else {
+                    return res.json({
+                        "msg": "INVALID_START_NODE",
+                        "body": {
+                            "newLine": null,
+                            "heading": player,
+                            "message": "You must start on either end of the path."
+                        }
+                    })
+                }
+            }
+        }
+    } else {
+        // Second Click   
+        // Else, this will constitute a second click
+            // if startNode === clickedNode
+                // reset startNode and firstClick
+                // return INVALID END NODE
         if ([x,y].length === startNode.length && [x,y].every((value, index) => value === startNode[index]) === true) {
             initialState = {
                 ...initialState,
@@ -71,16 +122,32 @@ server.post('/node-clicked', async (req, res) => {
                 "body": {
                     "newLine": null,
                     "heading": player,
-                    "message": "Invalid move!"
+                    "message": "Invalid move, can't choose starting node as end node!"
                 }
             })
         } else {
-            // Check end node
-            // End node can be more than one node away as long as it doesn't intersect
-            // and is a valid node
+            // startNode !== clickedNode
+            // if clickedNode in ends or in visited
+            const checkEnds = utils.checkEnds(ends, [x,y]);
+            if (checkEnds || checkVisited) {
+                initialState = {
+                    ...initialState,
+                    startNode: [],
+                    firstClick: !initialState.firstClick
+                }
+                // return INVALID END NODE
+                return res.json({
+                    "msg": "INVALID_END_NODE",
+                    "body": {
+                        "newLine": null,
+                        "heading": player,
+                        "message": "Invalid move!"
+                    }
+                })
+            } else {
 
-            // This needs to be changed to a function. Function needs to adhere to above rules
-            if ((x === startNode[0] + 1 && y === startNode[1]) || (x === startNode[0] - 1 && y === startNode[1]) || (x === startNode[0] && y === startNode[1] + 1) || (x === startNode[0] && y === startNode[1] - 1) || (x === startNode[0] + 1 && y === startNode[1] + 1) || (x === startNode[0] - 1 && y === startNode[1] - 1)) {
+                // set end nodes
+                // remove both nodes from allNodes
                 initialState = {
                     ...initialState,
                     firstClick: !initialState.firstClick,
@@ -91,11 +158,14 @@ server.post('/node-clicked', async (req, res) => {
                 }
                 let turn = initialState.turn
                 let player = turn % 2 === 0 ? 'Player 2' : 'Player 1';
+                // set validNodes
                 initialState = {
                     ...initialState,
                     validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes)
                 }
-                console.log(initialState)
+                
+                // if gameOver (no more validNodes)
+                    // return GAME OVER
                 const gameOver = initialState.validNodes.length === 0;
                 if (gameOver === true) {
                     return res.json({
@@ -116,6 +186,13 @@ server.post('/node-clicked', async (req, res) => {
                         }
                     })
                 } else {
+                    // not gameOver
+                        // return VALID END NODE
+                        // set visitedNodes
+                    initialState = {
+                        ...initialState,
+                        visitedNodes: utils.setVisited(initialState.visitedNodes, Array([x,y], startNode))
+                    }
                     return res.json({
                         "msg": "VALID_END_NODE",
                         "body": {
@@ -134,24 +211,10 @@ server.post('/node-clicked', async (req, res) => {
                         }
                     })
                 }
-            } else {
-                initialState = {
-                    ...initialState,
-                    firstClick: !initialState.firstClick,
-                    startNode: []
-                }
-                return res.json({
-                    "msg": "INVALID_END_NODE",
-                    "body": {
-                        "newLine": null,
-                        "heading": player,
-                        "message": "Invalid move!"
-                    }
-                })
             }
         }
     }
-});
+})
 
 server.post('/error', (req, res) => {
     return res.json({
