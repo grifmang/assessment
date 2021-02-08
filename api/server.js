@@ -46,11 +46,15 @@ server.post('/node-clicked', (req, res) => {
     // First Click
     if (startNode.length === 0) {
         if (ends.length === 0) {
+            // also set valid nodes to test against end node click
             initialState = {
                 ...initialState, 
                 firstClick: !initialState.firstClick,
-                startNode: [x,y]
+                startNode: [x,y],
+                validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes, initialState.visitedNodes, [x,y])
             }
+            console.log('first')
+            console.log(initialState)
             return res.json({
                 "msg": "VALID_START_NODE",
                 "body": {
@@ -130,7 +134,8 @@ server.post('/node-clicked', (req, res) => {
             // startNode !== clickedNode
             // if clickedNode in ends or in visited
             const checkEnds = utils.checkEnds(ends, [x,y]);
-            if (checkEnds || checkVisited) {
+            const checkValid = utils.checkValid(initialState.validNodes, [x,y]);
+            if (checkEnds || checkVisited || !checkValid) {
                 initialState = {
                     ...initialState,
                     startNode: [],
@@ -157,7 +162,7 @@ server.post('/node-clicked', (req, res) => {
                     startNode: [],
                     turn: initialState.turn + 1,
                     ends: utils.setEnds(Array([x,y], startNode), initialState.ends),
-                    allNodes: utils.removeFromAllNodes(Array([x,y], startNode), initialState.allNodes),
+                    allNodes: utils.removeFromAllNodes(Array([x,y], startNode, ...checkDistance), initialState.allNodes),
                     visitedNodes: utils.setVisited(initialState.visitedNodes, [[x,y], startNode, ...checkDistance])
                 }
                 let turn = initialState.turn
@@ -165,8 +170,9 @@ server.post('/node-clicked', (req, res) => {
                 // set validNodes
                 initialState = {
                     ...initialState,
-                    validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes)
+                    validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes, initialState.visitedNodes, startNode)
                 }
+                console.log(initialState)
                 // if gameOver (no more validNodes)
                     // return GAME OVER
                 // const gameOver = initialState.validNodes.length === 0;

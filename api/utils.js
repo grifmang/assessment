@@ -9,7 +9,18 @@ module.exports = {
     checkVertMulti,
     checkVisited,
     checkGameOver,
-    checkDistance
+    checkDistance,
+    checkValid
+}
+
+function checkValid(validNodes, node) {
+    let equals = false;
+    validNodes.map(element => {
+        if (JSON.stringify(node) === JSON.stringify(element)) {
+            equals = true;
+        }
+    })
+    return equals
 }
 
 function allNodes() {
@@ -70,10 +81,13 @@ function checkHorizMulti(end) {
     return horizontals;
 }
 
-function setValidNodes(ends, allNodes) {
+function setValidNodes(ends, allNodes, visited, startNode) {
     // Takes in the current end points and creates an array of all possible valid moves.
     // Then, we check those possibles against the known open or valid nodes. If they are not in the validNodes array, we remove them.
     // We then set validPossibles to the validNodes record.
+    if (ends.length === 0) {
+        ends = Array(startNode);
+    }
     let validPossibles = []
     // add all one node possibles to validPossibles based on the ends
     ends.map(element => {
@@ -110,9 +124,9 @@ function setValidNodes(ends, allNodes) {
     })
     // Remove arrays from validPossibles that match an array in ends
     validPossibles.map((e,i) => {
-        if (e.length === ends[0].length && e.every((value, index) => value === ends[0][index]) === true) {
+        if (ends[0] && e.length === ends[0].length && e.every((value, index) => value === ends[0][index]) === true) {
         validPossibles.splice(i, 1);
-        } else if (e.length === ends[1].length && e.every((value, index) => value === ends[1][index]) === true) {
+        } else if (ends[1] && e.length === ends[1].length && e.every((value, index) => value === ends[1][index]) === true) {
         validPossibles.splice(i, 1); 
         }
     })
@@ -127,6 +141,13 @@ function setValidNodes(ends, allNodes) {
     }
     // Remove duplicates from validPossible
     let uniques = Array.from((new Map(validPossibles.map(arr => [arr.join(), arr]))).values());
+
+    // Remove nodes from uniques that exist in visited
+    uniques.forEach((node, index) => {
+        if (checkVisited(visited, node)) {
+            uniques.splice(index, 1);
+        }
+    })
     return uniques;
 }
 
@@ -203,7 +224,7 @@ function checkGameOver(valid, visited) {
 function checkDistance(startNode, endNode) {
     let returnNodes = [];
     const sum = node => {
-        node.reduce((first, second) => first + second, 0);
+        return node.reduce((first, second) => first + second, 0);
     }
     let zero = Math.max(startNode[0], endNode[0]) - Math.min(startNode[0], endNode[0]);
     let one = Math.max(startNode[1], endNode[1]) - Math.min(startNode[1], endNode[1]);
@@ -213,7 +234,6 @@ function checkDistance(startNode, endNode) {
     if (zero > 1 && one <= 1) {
         // horizontal
         const high = Math.max(sum(startNode), sum(endNode));
-        // const low = Math.min(sum(startNode), sum(endNode));
         if (sum(startNode) === high) {
             // startNode is higher
             for (let i=endNode[0]+1; i<startNode[0]; i++) {
@@ -229,7 +249,6 @@ function checkDistance(startNode, endNode) {
     if (one > 1 && zero <= 1) {
         // vertical
         const high = Math.max(sum(startNode), sum(endNode));
-        // const low = Math.min(sum(startNode), sum(endNode));
         if (sum(startNode) === high) {
             // startNode is higher
             for (let i=endNode[1]+1; i<startNode[1]; i++) {
