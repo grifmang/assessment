@@ -54,7 +54,7 @@ server.post('/node-clicked', (req, res) => {
                 validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes, initialState.visitedNodes, [x,y])
             }
             console.log('first')
-            console.log(initialState)
+            console.log('\n*** First Click ***\n', initialState)
             return res.json({
                 "msg": "VALID_START_NODE",
                 "body": {
@@ -172,7 +172,7 @@ server.post('/node-clicked', (req, res) => {
                     ...initialState,
                     validNodes: utils.setValidNodes(initialState.ends, initialState.allNodes, initialState.visitedNodes, startNode)
                 }
-                console.log(initialState)
+                console.log('\n*** Second Click ***\n', initialState)
                 // if gameOver (no more validNodes)
                     // return GAME OVER
                 // const gameOver = initialState.validNodes.length === 0;
